@@ -16,22 +16,23 @@ void clienterror(int fd, char *cause, char *errnum,
 
 int main(int argc, char **argv) 
 {
-    int listenfd, connfd, port, clientlen;
+    int listenfd, connfd, port;
+    unsigned int clientlen;
     struct sockaddr_in clientaddr;
 
-    /* Check command line args */
+    /* Check command line arguments */
     if (argc != 2) {
-	fprintf(stderr, "usage: %s <port>\n", argv[0]);
-	exit(1);
+	    fprintf(stderr, "usage: %s <port>\n", argv[0]);
+	    exit(1);
     }
     port = atoi(argv[1]);
 
     listenfd = Open_listenfd(port);
     while (1) {
-	clientlen = sizeof(clientaddr);
-	connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
-	doit(connfd);
-	Close(connfd);
+	    clientlen = sizeof(clientaddr);
+	    connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+	    doit(connfd);
+	    Close(connfd);
     }
 }
 /* $end tinymain */
@@ -53,7 +54,7 @@ void doit(int fd)
     Rio_readlineb(&rio, buf, MAXLINE);
     sscanf(buf, "%s %s %s", method, uri, version);
     if (strcasecmp(method, "GET")) { 
-       clienterror(fd, method, "501", "Not Implemented",
+        clienterror(fd, method, "501", "Not Implemented",
                 "Tiny does not implement this method");
         return;
     }
@@ -62,26 +63,28 @@ void doit(int fd)
     /* Parse URI from GET request */
     is_static = parse_uri(uri, filename, cgiargs);
     if (stat(filename, &sbuf) < 0) {
-	clienterror(fd, filename, "404", "Not found",
+	    clienterror(fd, filename, "404", "Not found",
 		    "Tiny couldn't find this file");
-	return;
+	    return;
     }
 
     if (is_static) { /* Serve static content */
-	if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
-	    clienterror(fd, filename, "403", "Forbidden",
+	    if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
+	        clienterror(fd, filename, "403", "Forbidden",
 			"Tiny couldn't read the file");
-	    return;
-	}
-	serve_static(fd, filename, sbuf.st_size);
+	        return;
+	    }
+
+	    serve_static(fd, filename, sbuf.st_size);
     }
     else { /* Serve dynamic content */
-	if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
-	    clienterror(fd, filename, "403", "Forbidden",
+	    if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
+	        clienterror(fd, filename, "403", "Forbidden",
 			"Tiny couldn't run the CGI program");
-	    return;
-	}
-	serve_dynamic(fd, filename, cgiargs);
+	        return;
+	    }
+
+	    serve_dynamic(fd, filename, cgiargs);
     }
 }
 /* $end doit */
@@ -97,8 +100,8 @@ void read_requesthdrs(rio_t *rp)
     Rio_readlineb(rp, buf, MAXLINE);
     printf("%s", buf);
     while(strcmp(buf, "\r\n")) {
-	Rio_readlineb(rp, buf, MAXLINE);
-	printf("%s", buf);
+	    Rio_readlineb(rp, buf, MAXLINE);
+	    printf("%s", buf);
     }
     return;
 }
@@ -114,24 +117,24 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
     char *ptr;
 
     if (!strstr(uri, "cgi-bin")) {  /* Static content */
-	strcpy(cgiargs, "");
-	strcpy(filename, ".");
-	strcat(filename, uri);
-	if (uri[strlen(uri)-1] == '/')
-	    strcat(filename, "index.html");
-	return 1;
+	    strcpy(cgiargs, "");
+	    strcpy(filename, ".");
+	    strcat(filename, uri);
+	    if (uri[strlen(uri)-1] == '/')
+	        strcat(filename, "index.html");
+	    return 1;
     }
     else {  /* Dynamic content */
-	ptr = index(uri, '?');
-	if (ptr) {
-	    strcpy(cgiargs, ptr+1);
-	    *ptr = '\0';
-	}
-	else 
-	    strcpy(cgiargs, "");
-	strcpy(filename, ".");
-	strcat(filename, uri);
-	return 0;
+	    ptr = index(uri, '?');
+	    if (ptr) {
+	        strcpy(cgiargs, ptr+1);
+	        *ptr = '\0';
+	    }
+	    else 
+	        strcpy(cgiargs, "");
+	    strcpy(filename, ".");
+	    strcat(filename, uri);
+	    return 0;
     }
 }
 /* $end parse_uri */
@@ -167,13 +170,14 @@ void serve_static(int fd, char *filename, int filesize)
 void get_filetype(char *filename, char *filetype) 
 {
     if (strstr(filename, ".html"))
-	strcpy(filetype, "text/html");
+	    strcpy(filetype, "text/html");
     else if (strstr(filename, ".gif"))
-	strcpy(filetype, "image/gif");
+	    strcpy(filetype, "image/gif");
     else if (strstr(filename, ".jpg"))
-	strcpy(filetype, "image/jpeg");
-    else
-	strcpy(filetype, "text/plain");
+	    strcpy(filetype, "image/jpeg");
+    else if (strstr(filename, ".png"))
+	    strcpy(filetype, "image/png");
+    else strcpy(filetype, "text/plain");
 }  
 /* $end serve_static */
 
@@ -193,9 +197,9 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
   
     if (Fork() == 0) { /* child */
 	/* Real server would set all CGI vars here */
-	setenv("QUERY_STRING", cgiargs, 1); 
-	Dup2(fd, STDOUT_FILENO);         /* Redirect stdout to client */
-	Execve(filename, emptylist, environ); /* Run CGI program */
+	    setenv("QUERY_STRING", cgiargs, 1); 
+	    Dup2(fd, STDOUT_FILENO);         /* Redirect stdout to client */
+	    Execve(filename, emptylist, environ); /* Run CGI program */
     }
     Wait(NULL); /* Parent waits for and reaps child */
 }
