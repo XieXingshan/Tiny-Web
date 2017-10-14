@@ -7,9 +7,12 @@ gcc -Wall -o tiny tiny.c utility.c
 
 gcc -Wall -o adder adder.c utility.c
 
-# 使用:
+# 使用(以Ubuntu为例):
 
 web服务器: "./tiny 8000"(在terminal输入执行)
-web客户端: 浏览器地址栏输入 "localhost:8000"访问index.html;
-或者在另一个terminal输入"telnet localhost 8000" 回车执行,然
-后再输入"GET / HTTP/1.0"获取index.html的内容
+
+web客户端: 
+1.静态访问: 浏览器地址栏输入 "localhost:8000"访问
+index.html; 或者在另一个terminal输入"telnet localhost 8000" 
+回车执行,然后再输入"GET / HTTP/1.0"获取index.html的内容
+2.动态访问: 浏览器地址栏输入 "http://localhost:8000/cgi-bin/adder?234&432"
