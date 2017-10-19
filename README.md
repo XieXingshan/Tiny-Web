@@ -3,9 +3,7 @@
 
 # 编译:
 
-gcc -Wall -o tiny tiny.c utility.c
-
-gcc -Wall -o adder adder.c utility.c
+make all
 
 # 使用(以Ubuntu为例):
 
